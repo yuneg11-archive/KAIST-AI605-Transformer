@@ -158,7 +158,7 @@ class TypoDataset(NLPDataset):
                            for s, p in zip(self.raw_data, should_perterb)]
             self.target = [self.tokens_to_idx(s) for s in self.raw_data]
         elif level == "sentence":
-            sentences = [s for s in sentences if len(s) < 100]
+            sentences = [s for s in sentences if len(s) <= 48]
             idxs = torch.randint(len(sentences), size=(num_data,), generator=self.rng)
             self.raw_data = [sentences[i] for i in idxs]
             should_perterb = (torch.rand((num_data,), generator=self.rng) < noise_rate).tolist()
@@ -174,8 +174,7 @@ class TypoDataset(NLPDataset):
             t = torch.randint(13, size=(1,), generator=self.rng).item()
             i = torch.randint(token_len - 1, size=(1,), generator=self.rng).item()
             if t < 3:  # Swap
-                if tokens[i + 1] != " ":
-                    return tokens[:i] + tokens[i + 1] + tokens[i] + tokens[i + 2:]
+                return tokens[:i] + tokens[i + 1] + tokens[i] + tokens[i + 2:]
             elif t < 6:  # Insert
                 v = Vocab.sample_chars(generator=self.rng)
                 return tokens[:i] + v + tokens[i:]

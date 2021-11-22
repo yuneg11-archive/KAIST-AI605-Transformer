@@ -129,11 +129,11 @@ def main(args):
                                  num_encoder_layers=2, num_decoder_layers=2)
         criterion = CrossEntropyLoss()
         optimizer = optim.Adam(model.parameters(), lr=5e-3)
+        scheduler = None
 
         ex_batch = next(iter(test_loader))
         ex_src, ex_src_mask = ex_batch[0][:5].to(device), None
-        scheduler = None
-        parallel = True
+        parallel = False
         num_epochs = 100
 
     elif args.dataset.startswith("typo") or args.dataset.startswith("t"):
@@ -157,17 +157,19 @@ def main(args):
         if args.dataset == "typo-word":
             model = TransformerModel(vocab_size, d_model=512, dim_feedforward=2048,
                                      num_encoder_layers=4, num_decoder_layers=4)
+            num_epochs = 200
         elif args.dataset == "typo-sentence":
-            model = TransformerModel(vocab_size, d_model=512, dim_feedforward=2048,
-                                     num_encoder_layers=6, num_decoder_layers=6)
-        criterion = CrossEntropyLoss(label_smoothing=0.2)
-        optimizer = optim.Adam(model.parameters(), lr=3e-3)
+            model = TransformerModel(vocab_size, d_model=256, dim_feedforward=1024,
+                                     num_encoder_layers=4, num_decoder_layers=4)
+            num_epochs = 300
+
+        criterion = CrossEntropyLoss(label_smoothing=0.1)
+        optimizer = optim.Adam(model.parameters(), lr=1e-2)
+        scheduler = NoamLR(optimizer, warmup_epochs=30)
 
         ex_batch = next(iter(test_loader))
         ex_src, ex_src_mask = ex_batch[0][:5].to(device), ex_batch[2][:5].to(device)
-        scheduler = NoamLR(optimizer, warmup_epochs=30)
         parallel = True
-        num_epochs = 300
 
     else:
         raise ValueError("Unknown dataset: {}".format(args.dataset))
